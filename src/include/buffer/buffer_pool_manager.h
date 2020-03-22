@@ -152,6 +152,13 @@ class BufferPoolManager {
    */
   void FlushAllPagesImpl();
 
+  /**
+   * Find a victim page from free list or replacer
+   * @param[out] victim frame id of victim frame
+   * @return true if successful, false if nothing found
+   */ 
+  bool FindVictim(frame_id_t *victim);
+
   /** Number of pages in the buffer pool. */
   size_t pool_size_;
   /** Array of buffer pool pages. */
