@@ -18,8 +18,7 @@ ClockReplacer::ClockReplacer(size_t num_pages) {
     // clock hand
     clock_hand = 0;
     for (size_t i = 0; i < num_pages; i++) {
-        ref.push_back(false);
-        in_replacer.push_back(false);
+        frames.push_back({false, false});
     }
 }
 
@@ -28,49 +27,51 @@ ClockReplacer::~ClockReplacer() = default;
 bool ClockReplacer::Victim(frame_id_t *frame_id) {
     frame_id_t start = clock_hand;
     bool second_round = false;
-    clock_hand = (clock_hand+1) % ref.size();
+    clock_hand = (clock_hand+1) % frames.size();
     while (clock_hand != start) {
-        if (in_replacer.at(clock_hand)) {
-            if (ref.at(clock_hand) == false) {
+        if (frames.at(clock_hand).in_replacer) {
+            if (frames.at(clock_hand).ref == false) {
                 *frame_id = clock_hand;
-                in_replacer.at(clock_hand) = false;
+                frames.at(clock_hand).in_replacer = false;
                 return true;
             } else {
-                ref.at(clock_hand) = false;   
+                frames.at(clock_hand).ref = false;   
             }
+            // at least one frame is in replacer, do a second
+            // round in case all frames have ref == true
             second_round = true;  
         }
         // move clock_hand
-        clock_hand = (clock_hand+1) % ref.size();
+        clock_hand = (clock_hand+1) % frames.size();
     }
     if (second_round) {
-        clock_hand = (clock_hand+1) % ref.size();
+        clock_hand = (clock_hand+1) % frames.size();
         while (clock_hand != start) {
-            if (in_replacer.at(clock_hand) && ref.at(clock_hand) == false) {
+            if (frames.at(clock_hand).in_replacer && frames.at(clock_hand).ref == false) {
                 *frame_id = clock_hand;
-                in_replacer.at(clock_hand) = false;
+                frames.at(clock_hand).in_replacer = false;
                 return true;
             }
             // move clock_hand
-            clock_hand = (clock_hand+1) % ref.size();
+            clock_hand = (clock_hand+1) % frames.size();
         }
     }
     return false;
 }
 
 void ClockReplacer::Pin(frame_id_t frame_id) {
-    in_replacer.at(frame_id) = false;
+    frames.at(frame_id).in_replacer = false;
 }
 
 void ClockReplacer::Unpin(frame_id_t frame_id) {
-    in_replacer.at(frame_id) = true;
-    ref.at(frame_id) = true;
+    frames.at(frame_id).in_replacer = true;
+    frames.at(frame_id).ref = true;
 }
 
 size_t ClockReplacer::Size() { 
     size_t size = 0;
-    for (auto t=in_replacer.begin(); t!=in_replacer.end(); t++) {
-        if (*t == true) {
+    for (auto t=frames.begin(); t!=frames.end(); t++) {
+        if ((*t).in_replacer == true) {
             size++;
         }
     }
