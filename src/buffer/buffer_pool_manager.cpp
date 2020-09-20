@@ -44,7 +44,7 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
   latch_.lock();
-  LOG_DEBUG("Fetching page %d", page_id);
+  // LOG_DEBUG("Fetching page %d", page_id);
   // Search the page table for the requested page P.
   // If P exists, pin it and return it immediately.
   if (page_table_.find(page_id) != page_table_.end()) {
@@ -79,7 +79,7 @@ Page *BufferPoolManager::FetchPageImpl(page_id_t page_id) {
 
 bool BufferPoolManager::UnpinPageImpl(page_id_t page_id, bool is_dirty) {
   latch_.lock();
-  LOG_DEBUG("Unpinning page %d, is_dirty=%d", page_id, is_dirty);
+  // LOG_DEBUG("Unpinning page %d, is_dirty=%d", page_id, is_dirty);
   if (page_table_.find(page_id) != page_table_.end()) {
     frame_id_t fid = page_table_.at(page_id);
     if (pages_[fid].pin_count_ > 0) {
@@ -107,7 +107,7 @@ bool BufferPoolManager::FlushPageImpl(page_id_t page_id) {
       return true;
     }
   }
-  LOG_DEBUG("Flushed page %d to disk", page_id);
+  // LOG_DEBUG("Flushed page %d to disk", page_id);
   latch_.unlock();
   return false;
 }
@@ -119,13 +119,13 @@ Page *BufferPoolManager::NewPageImpl(page_id_t *page_id) {
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
   latch_.lock();
-  LOG_DEBUG("Creating new page");
+  // LOG_DEBUG("Creating new page");
   // Pick a victim page P from either the free list or the replacer. Always pick from the free list first.
   frame_id_t victim;
   if (!FindVictim(&victim)) {
     // If all the pages in the buffer pool are pinned, return nullptr.
     latch_.unlock();
-    LOG_DEBUG("Failed to create new page, buffer pool full");
+    // LOG_DEBUG("Failed to create new page, buffer pool full");
     return nullptr;
   }
   // If P is dirty, write it back to the disk.
@@ -143,7 +143,7 @@ Page *BufferPoolManager::NewPageImpl(page_id_t *page_id) {
   replacer_->Pin(victim);
   page_table_[*page_id] = victim;
   //  Return a pointer to P.
-  LOG_DEBUG("Created new page %d", *page_id);
+  // LOG_DEBUG("Created new page %d", *page_id);
   latch_.unlock();
   return &pages_[victim];
 }
@@ -155,7 +155,7 @@ bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
   latch_.lock();
-  LOG_DEBUG("Deleting page %d", page_id);
+  // LOG_DEBUG("Deleting page %d", page_id);
   // Search the page table for the requested page (P).
   if (page_table_.find(page_id) != page_table_.end()) {
     // If P exists, but has a non-zero pin-count, return false. Someone is using the page.
@@ -185,7 +185,7 @@ bool BufferPoolManager::DeletePageImpl(page_id_t page_id) {
 void BufferPoolManager::FlushAllPagesImpl() {
   // You can do it!
   latch_.lock();
-  LOG_DEBUG("Flushing all pages");
+  // LOG_DEBUG("Flushing all pages");
   for (size_t i = 0; i < pool_size_; i++) {
     if (pages_[i].page_id_ != INVALID_PAGE_ID && pages_[i].is_dirty_) {
       disk_manager_->WritePage(pages_[i].page_id_, pages_[i].data_);
@@ -202,13 +202,13 @@ bool BufferPoolManager::FindVictim(frame_id_t *victim) {
     *victim = free_list_.front();
     free_list_.pop_front();
     success = true;
-    LOG_DEBUG("Found free page %d", *victim);
+    // LOG_DEBUG("Found free page %d", *victim);
   } else {  // find from replacer
     success = replacer_->Victim(victim);
     if (success) {
-      LOG_DEBUG("Found victim %d", *victim);
+      // LOG_DEBUG("Found victim %d", *victim);
     } else {
-      LOG_DEBUG("No victim found");
+      // LOG_DEBUG("No victim found");
     }
   }
   return success;
@@ -217,14 +217,14 @@ bool BufferPoolManager::FindVictim(frame_id_t *victim) {
 // must be called while holding latch
 void BufferPoolManager::DebugPrint() {
   return;
-  LOG_DEBUG("Page table:");
-  for (auto& t : page_table_) {
-    LOG_DEBUG("%d -> %d", t.first, t.second);
-  }
-  LOG_DEBUG("frame\tpage_id\tpin_count\tis_dirty");
-  for (size_t i = 0; i < pool_size_; i++) {
-    LOG_DEBUG("%lu\t%d\t%d\t%d", i, pages_[i].page_id_, pages_[i].pin_count_, pages_[i].is_dirty_);
-  }
+  // // LOG_DEBUG("Page table:");
+  // for (auto& t : page_table_) {
+  //   // LOG_DEBUG("%d -> %d", t.first, t.second);
+  // }
+  // // LOG_DEBUG("frame\tpage_id\tpin_count\tis_dirty");
+  // for (size_t i = 0; i < pool_size_; i++) {
+  //   // LOG_DEBUG("%lu\t%d\t%d\t%d", i, pages_[i].page_id_, pages_[i].pin_count_, pages_[i].is_dirty_);
+  // }
 }
 
 }  // namespace bustub
