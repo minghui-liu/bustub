@@ -158,6 +158,8 @@ class BufferPoolManager {
    * @return true if successful, false if nothing found
    */ 
   bool FindVictim(frame_id_t *victim);
+  
+  void DebugPrint();
 
   /** Number of pages in the buffer pool. */
   size_t pool_size_;

@@ -45,14 +45,17 @@ class ClockReplacer : public Replacer {
 
   size_t Size() override;
 
+
  private:
   // TODO(student): implement me!
-  frame_id_t clock_hand;
-  struct frame {
-    bool in_replacer;
-    bool ref;
+  frame_id_t clock_hand_;
+  struct Frame {
+    bool in_replacer_ = false;
+    bool ref_ = false;
   };
-  std::vector<struct frame> frames;
+  Frame *frames_;
+  size_t num_pages_ = 0;
+  void DebugPrint();
 };
 
 }  // namespace bustub
